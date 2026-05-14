@@ -1,6 +1,88 @@
-from htmlnode import LeafNode
+from enum import Enum
+
+from htmlnode import LeafNode, ParentNode
 from textnode import TextNode, TextType
 import re
+
+class BlockType(Enum):
+    PARAGRAPH = "paragraph"
+    HEADING = "heading"
+    CODE = "code"
+    QUOTE = "quote"
+    UNORDERED_LIST = "unordered_list"
+    ORDERED_LIST = "ordered_list"
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+    root_node = ParentNode("div", [])
+    for block in blocks:
+        block_type = block_to_block_type(block)
+
+        if block_type == BlockType.PARAGRAPH:
+            child_nodes = text_to_children(block.strip().replace("\n", " "))
+            root_node.children.append(ParentNode("p", child_nodes))
+
+        elif block_type == BlockType.HEADING:
+            heading_level = len(block) - len(block.lstrip("#"))
+            if heading_level > 6:
+                heading_level = 6
+            child_nodes = text_to_children(block[heading_level + 1:].strip())
+            root_node.children.append(ParentNode(f"h{heading_level}", child_nodes))
+
+        elif block_type == BlockType.QUOTE:
+            quote_line = clean_string_to_one_string(block, ">")
+
+            child_nodes = text_to_children(quote_line)
+            root_node.children.append(ParentNode("blockquote", child_nodes))
+
+        elif block_type == BlockType.UNORDERED_LIST:
+            child_nodes = [ParentNode("li", text_to_children(line[2:].strip())) for line in block.split("\n")]
+            root_node.children.append(ParentNode("ul", child_nodes))
+
+        elif block_type == BlockType.ORDERED_LIST:
+            child_nodes = [ParentNode("li", text_to_children(re.sub(r'^\d+\. ', '', line).strip())) for line in block.split("\n")]
+            root_node.children.append(ParentNode("ol", child_nodes))
+
+        elif block_type == BlockType.CODE:
+            code_content = block[4:-3]  # remove the ``` markers
+            text_node = TextNode(code_content, TextType.TEXT)
+            html_node = text_node_to_html(text_node)
+            code_node = ParentNode("code", [html_node])
+            root_node.children.append(ParentNode("pre", [code_node]))
+         
+        else:
+            raise ValueError(f"Unknown block type: {block_type}")
+  
+
+    return root_node        
+
+def clean_string_to_one_string(block, character):
+    raw_lines = block.split("\n")
+    cleaned_lines = []
+    for line in raw_lines:
+        cleaned = line.lstrip(character).strip()  # whatever cleanup you need
+        cleaned_lines.append(cleaned)
+    combined = " ".join(cleaned_lines)  # one string, space-separated
+    return combined
+
+def text_to_children(text):
+    text_nodes = text_to_textnodes(text)
+    html_nodes = [text_node_to_html(text_node) for text_node in text_nodes]
+    return html_nodes
+
+def block_to_block_type(block):
+    if block.startswith(("# ", "## ", "### ", "#### ", "##### ", "###### ")):
+        return BlockType.HEADING
+    elif block.startswith("```\n") and block.endswith("```"):
+        return BlockType.CODE
+    elif all(line.startswith(">") for line in block.split("\n")):
+        return BlockType.QUOTE
+    elif all(line.startswith("- ") for line in block.split("\n")):
+        return BlockType.UNORDERED_LIST
+    elif re.match(r"^\d+\. ", block):
+        return BlockType.ORDERED_LIST
+    else:
+        return BlockType.PARAGRAPH
 
 def text_node_to_html(text_node):
     if text_node.text_type == TextType.TEXT:
@@ -95,3 +177,20 @@ def extract_markdown_links(text):
     for link_text, url in matches:
         links.append((link_text, url))
     return links
+
+def text_to_textnodes(text):
+    nodes = [TextNode(text, TextType.TEXT)]
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE_TEXT)
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    return nodes
+
+def markdown_to_blocks(markdown):
+    blocks = []
+    lines = markdown.split("\n\n")
+    for line in lines:
+        if (line.strip() != ""):
+            blocks.append(line.strip())
+    return blocks

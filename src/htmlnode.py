@@ -1,3 +1,5 @@
+VOID_TAGS = {"img", "br", "hr", "input", "meta", "link"} 
+
 class HTMLNode:
     def __init__(self, tag=None, value=None, children=None, props=None):
         self.tag = tag
@@ -25,6 +27,8 @@ class LeafNode(HTMLNode):
             raise ValueError("LeafNode must have a value")
         if self.tag is None:
             return self.value
+        if self.tag in VOID_TAGS:
+            return f"<{self.tag}{self.props_to_html()} />"
 
         return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
     
