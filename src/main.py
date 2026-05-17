@@ -1,3 +1,4 @@
+from functions import generate_page
 from textnode import TextNode, TextType
 
 def main():
@@ -34,5 +35,7 @@ def copy_from_static_to_public():
         else:
             print(f"Copying file {s} to {d}")
             shutil.copy2(s, d)
+
+    generate_page("content/index.md", "template.html", "public/index.html")
 
 main()

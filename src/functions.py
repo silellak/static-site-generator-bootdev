@@ -56,6 +56,16 @@ def markdown_to_html_node(markdown):
 
     return root_node        
 
+def extract_title(markdown):
+    lines = markdown.split("\n")
+    title = None
+    for line in lines:
+        if line.startswith("# "):
+            title = line[2:].strip()
+            return title
+    if title is None:
+        raise Exception("No title found in markdown")
+    
 def clean_string_to_one_string(block, character):
     raw_lines = block.split("\n")
     cleaned_lines = []
@@ -194,3 +204,17 @@ def markdown_to_blocks(markdown):
         if (line.strip() != ""):
             blocks.append(line.strip())
     return blocks
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using template {template_path}")
+    with open(from_path, "r") as f:
+        markdown = f.read()
+    html_node = markdown_to_html_node(markdown)
+    html_content = html_node.to_html()
+    with open(template_path, "r") as f:
+        template = f.read()
+    title = extract_title(markdown)
+    final_content = template.replace("{{ Content }}", html_content)
+    final_content = final_content.replace("{{ Title }}", title)
+    with open(dest_path, "w") as f:
+        f.write(final_content)

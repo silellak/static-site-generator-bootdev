@@ -1,5 +1,5 @@
 import unittest
-from functions import extract_markdown_images, extract_markdown_links, markdown_to_blocks, markdown_to_html_node, split_nodes_delimiter, split_nodes_image, split_nodes_link, text_node_to_html, text_to_textnodes
+from functions import extract_markdown_images, extract_markdown_links, extract_title, markdown_to_blocks, markdown_to_html_node, split_nodes_delimiter, split_nodes_image, split_nodes_link, text_node_to_html, text_to_textnodes
 from textnode import TextNode, TextType
 
 
@@ -515,6 +515,28 @@ This is code that should not be parsed for *formatting* or [links](https://examp
             html,
             "<div><h1>Heading</h1><pre><code>This is code that should not be parsed for *formatting* or [links](https://example.com)\n</code></pre><blockquote>This is a quote with a <a href=\"https://example.com\">link</a> and <b>bold</b> text</blockquote><ul><li>This is a list item with <i>italic</i> text and an <img src=\"https://i.imgur.com/zjjcJKZ.png\" alt=\"image\" /></li></ul></div>",
         )
+
+    def test_extract_title(self):
+        md = """# This is the title that should be extracted
+This is some content that should not be part of the title block here
+"""
+        title = extract_title(md)
+        self.assertEqual(title, "This is the title that should be extracted")   
+
+    def test_extract_title_no_title(self):
+        md = """This is some content that should not be part of the title block here
+"""
+        with self.assertRaises(Exception) as context:
+            extract_title(md)
+        self.assertEqual(str(context.exception), "No title found in markdown")
+    
+    def test_extract_title_multiple_titles(self):
+            md = """# This is the first title that should be extracted
+# This is the second title that should not be extracted
+This is some content that should not be part of the title block here
+"""
+            title = extract_title(md)
+            self.assertEqual(title, "This is the first title that should be extracted")
 
 # if __name__ == "__main__":
 #     unittest.main()
