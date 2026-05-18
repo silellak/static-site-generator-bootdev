@@ -1,4 +1,4 @@
-from functions import generate_page
+from functions import generate_page, generate_page_recursive
 from textnode import TextNode, TextType
 
 def main():
@@ -36,6 +36,6 @@ def copy_from_static_to_public():
             print(f"Copying file {s} to {d}")
             shutil.copy2(s, d)
 
-    generate_page("content/index.md", "template.html", "public/index.html")
+    generate_page_recursive("content", "template.html", "public")
 
 main()
