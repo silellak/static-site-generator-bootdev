@@ -4,7 +4,10 @@ from functions import generate_page, generate_page_recursive
 from textnode import TextNode, TextType
 
 def main():
-    basepath = sys.argv[0]
+    if sys.argv[1] is None:
+        basepath = "/"
+    else:
+        basepath = sys.argv[1]
     print("Starting static site generation...")
     copy_from_static_to_public(basepath)
 
