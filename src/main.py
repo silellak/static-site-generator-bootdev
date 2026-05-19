@@ -1,11 +1,14 @@
+import sys
+
 from functions import generate_page, generate_page_recursive
 from textnode import TextNode, TextType
 
 def main():
+    basepath = sys.argv[0]
     print("Starting static site generation...")
-    copy_from_static_to_public()
+    copy_from_static_to_public(basepath)
 
-def copy_from_static_to_public():
+def copy_from_static_to_public(basepath):
     import shutil
     import os
 
@@ -36,6 +39,6 @@ def copy_from_static_to_public():
             print(f"Copying file {s} to {d}")
             shutil.copy2(s, d)
 
-    generate_page_recursive("content", "template.html", "public")
+    generate_page_recursive("content", "template.html", "docs", basepath)
 
 main()
