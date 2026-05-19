@@ -13,7 +13,7 @@ def copy_from_static_to_public(basepath):
     import os
 
     src_dir = "static"
-    dst_dir = "public"
+    dst_dir = "docs"
 
     print(f"Copying contents from {src_dir} to {dst_dir}...")
 
